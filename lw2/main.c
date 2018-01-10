@@ -4,13 +4,14 @@
 #include <malloc.h>
 #include <pthread.h>
 
-int count = 2;
+int count = 4;
 
 char* inner[] = {
-	"lalka", "lolka"
+	"lalka", "lolka",
+	"xxxx", "xxyx"
 };
 
-int results[1];
+float results[2];
 
 pthread_t thrs[4];
 
@@ -21,8 +22,8 @@ void abort() {
 }
 
 
-int persent(char* first, char* second) {
-	int res = 0;
+float persent(char* first, char* second) {
+	float res = 0;
 	char* a;
 	char* b;
 	if(strlen(first) < strlen(second)) {
@@ -34,18 +35,20 @@ int persent(char* first, char* second) {
 	}
 	int l = strlen(a);
 	for(int i = 0; i < l; i++) {
-		if(a[i] == b[i]) {
-			res++;
+		if(a[i] != b[i]) {
+			res+=1;
 		}
 	}
-	return (res / (l / 100)) * 100;
+	return res / ( (float)l / 100 );
 }
 
 
 void* prod(void* me) {
 	int offset = *((int*)me);
-	int p = persent(inner[offset], inner[offset+1]);
+	pthread_mutex_lock(&mutex);
+	float p = persent(inner[offset], inner[offset+1]);
 	results[offset / 2] = p;
+	pthread_mutex_unlock(&mutex);
 }
 
 int main() {
@@ -72,7 +75,7 @@ int main() {
 				perror("Cannot create a thread");
 				abort();
 			}
-			last_id = ath + strid + 1;
+			last_id += 2;
 		}
 		while(ath > 0) {
 			--ath;
@@ -84,7 +87,7 @@ int main() {
 		}
 	}
 	for(int i = 0; i<count / 2; i++) {
-		printf("%d\n", results[i]+1);
+		printf("diff between \"%s\" and \"%s\" is %.2f%%\n", inner[i*2], inner[i*2+1], results[i]);
 	}
 	free(ids);
 	return 0;
